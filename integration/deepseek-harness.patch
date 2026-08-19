@@ -1,0 +1,67 @@
+diff --git a/packages/api/remotes/package.json b/packages/api/remotes/package.json
+index 0bc596bf71..0308c10dda 100644
+--- a/packages/api/remotes/package.json
++++ b/packages/api/remotes/package.json
+@@ -72,0 +73 @@
++    "@deepseek-ai/dsh-prompt-enhancement": "workspace:^",
+@@ -89,0 +91 @@
++    "@deepseek-ai/dsh-prompt-enhancement": "workspace:^",
+diff --git a/packages/api/remotes/src/client/index.ts b/packages/api/remotes/src/client/index.ts
+index 210ec0bf80..1c394b5308 100644
+--- a/packages/api/remotes/src/client/index.ts
++++ b/packages/api/remotes/src/client/index.ts
+@@ -8,0 +9 @@ import messageFeedbackRemote from '@deepseek-ai/dsh-message-feedback/remote'
++import promptEnhancementRemote from '@deepseek-ai/dsh-prompt-enhancement/remote'
+@@ -16,0 +18 @@ export type {} from '@deepseek-ai/dsh-message-feedback/remote'
++export type {} from '@deepseek-ai/dsh-prompt-enhancement/remote'
+@@ -109 +111 @@ export async function apply(ctx: Context): Promise<() => Promise<void>> {
+-      commandsRemote, goalsRemote, dynamicRemote, pluginInventoryRemote, messageFeedbackRemote,
++      commandsRemote, goalsRemote, dynamicRemote, pluginInventoryRemote, messageFeedbackRemote, promptEnhancementRemote,
+diff --git a/packages/api/remotes/tsconfig.client.json b/packages/api/remotes/tsconfig.client.json
+index a0161dd047..50ef2feef4 100644
+--- a/packages/api/remotes/tsconfig.client.json
++++ b/packages/api/remotes/tsconfig.client.json
+@@ -35,0 +36,3 @@
++    {
++      "path": "../../prompt/prompt-enhancement"
++    },
+diff --git a/packages/bundle/web-app/cordis.patch.yml b/packages/bundle/web-app/cordis.patch.yml
+index b06e63b54f..e868c6af1b 100644
+--- a/packages/bundle/web-app/cordis.patch.yml
++++ b/packages/bundle/web-app/cordis.patch.yml
+@@ -68,0 +69,11 @@
++    - id: prompt-enhancement
++      name: '@deepseek-ai/dsh-prompt-enhancement'
++      config:
++        maxPromptChars: 12000
++        maxContextChars: 12000
++        maxHistoryRecords: 200
++        maxContextFiles: 6
++        maxContextFileChars: 5000
++        maxSessionMessages: 8
++        maxOutputTokens: 1200
++
+@@ -248,0 +260,3 @@
++    - id: ui-prompt-enhancement
++      name: '@deepseek-ai/dsh-client-ui-prompt-enhancement'
++
+diff --git a/packages/bundle/web-app/package.json b/packages/bundle/web-app/package.json
+index ad9ec48fae..61899137f9 100644
+--- a/packages/bundle/web-app/package.json
++++ b/packages/bundle/web-app/package.json
+@@ -62,0 +63 @@
++    "@deepseek-ai/dsh-client-ui-prompt-enhancement": "workspace:^",
+@@ -96,0 +98 @@
++    "@deepseek-ai/dsh-prompt-enhancement": "workspace:^",
+diff --git a/tsconfig.client.json b/tsconfig.client.json
+index e599f76f1b..293916da71 100644
+--- a/tsconfig.client.json
++++ b/tsconfig.client.json
+@@ -80,0 +81 @@
++    { "path": "./packages/client/ui-prompt-enhancement" },
+diff --git a/tsconfig.host.json b/tsconfig.host.json
+index 459036247a..a79d046c79 100644
+--- a/tsconfig.host.json
++++ b/tsconfig.host.json
+@@ -155,0 +156 @@
++    { "path": "./packages/prompt/prompt-enhancement" },

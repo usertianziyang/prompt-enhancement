@@ -1,0 +1,19 @@
+{
+  "name": "deepseek-harness-prompt-enhancement",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Prompt enhancement Host and Web Client plugins for DeepSeek Harness",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/usertianziyang/deepseek-harness-prompt-enhancement.git"
+  },
+  "files": [
+    "packages",
+    "integration",
+    ".agents",
+    "README.md",
+    "LICENSE"
+  ]
+}
