@@ -1,6 +1,7 @@
 node_modules/
-lib/
 dist/
 .env
 .DS_Store
 *.tgz
+.playwright-cli/
+lib/*.map

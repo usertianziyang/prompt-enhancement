@@ -5,6 +5,7 @@ import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type { PromptEnhancementMode, PromptEnhancementRecord } from '@deepseek-ai/dsh-prompt-enhancement/client'
+import promptEnhancementRemote from '@deepseek-ai/dsh-prompt-enhancement/remote'
 import { PromptEnhancementControl } from './PromptEnhancementControl.tsx'
 import { PromptEnhancementHeaderAction } from './PromptEnhancementHeaderAction.tsx'
 import { PromptEnhancementHistory } from './PromptEnhancementHistory.tsx'
@@ -20,9 +21,14 @@ export interface PromptEnhancementInjected {
 
 declare module '@deepseek-ai/dsh-client-ui-slots' { interface LocaleNamespaceMap { 'prompt-enhancement': PromptEnhancementKey } }
 const NS = 'prompt-enhancement'
-export const inject = ['slots', 'remote', 'remote.promptEnhancement', 'locale', 'sessions', 'conversation']
+export const inject = ['remote']
 
-export function apply(ctx: ClientContext): void {
+export async function apply(ctx: ClientContext): Promise<void> {
+  await ctx.remote.$mount(promptEnhancementRemote)
+  await ctx.inject(['slots', 'remote', 'remote.promptEnhancement', 'locale', 'sessions', 'conversation'], applyUi)
+}
+
+function applyUi(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'ui-prompt-enhancement: dictionaries')
   const controller = new PromptEnhancementController(ctx)
   const injected = (): PromptEnhancementInjected => ({

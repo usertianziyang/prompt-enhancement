@@ -1,0 +1,11 @@
+- insert:
+    - id: prompt-enhancement
+      name: dsh-prompt-enhancement
+      config:
+        maxPromptChars: 12000
+        maxContextChars: 12000
+        maxHistoryRecords: 200
+        maxContextFiles: 6
+        maxContextFileChars: 5000
+        maxSessionMessages: 8
+        maxOutputTokens: 1200

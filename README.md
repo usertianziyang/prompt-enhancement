@@ -1,46 +1,73 @@
 # DeepSeek Harness Prompt Enhancement
 
-Host and Web Client plugins that turn a draft into a precise coding-agent prompt without starting an Agent turn or changing the Session log.
+An installable DeepSeek Harness Web bundle that rewrites a draft into a precise coding-agent prompt without starting an Agent turn or changing the Session log.
 
-## Contents
+## Requirements
 
-- `packages/prompt/prompt-enhancement`: Host service, independent history storage, bounded project context, and Typert Remote methods.
-- `packages/client/ui-prompt-enhancement`: Composer mode menu, enhancement action, cancellation, draft compare-and-set, and history UI.
-- `integration/deepseek-harness.patch`: Harness source changes that register the Host Remote, Web bundle rows, Client package, and project references.
+- DeepSeek Harness `0.1.0-rc.7`
+- Node.js `^22.19.0` or `>=24.0.0`
+- A configured model provider in the target Web profile
 
-## Compatibility
+## Install
 
-This repository targets the matching DeepSeek Harness source revision and its workspace dependency graph. It is a source plugin repository, not a standalone application or a drop-in npm package for an arbitrary Harness release.
-
-## Install Into A Harness Checkout
-
-From a clean DeepSeek Harness checkout with the compatible source tree:
+Install the bundle into the official `web` profile:
 
 ```sh
-git apply /path/to/deepseek-harness-prompt-enhancement/integration/deepseek-harness.patch
-cp -R /path/to/deepseek-harness-prompt-enhancement/packages/prompt/prompt-enhancement packages/prompt/prompt-enhancement
-cp -R /path/to/deepseek-harness-prompt-enhancement/packages/client/ui-prompt-enhancement packages/client/ui-prompt-enhancement
-pnpm install
-pnpm run build
-pnpm dsh web
+dsh plugin --profile web add github:usertianziyang/deepseek-harness-prompt-enhancement
 ```
 
-The Web bundle registers the Host and Client packages automatically. The default Web URL is `http://127.0.0.1:3080`.
+For a reproducible installation, pin a reviewed commit:
 
-For UI-only changes during development, run `pnpm run dev:web` in the same Harness checkout and refresh the existing Web URL after the watcher rebuilds the Client bundle.
+```sh
+dsh plugin --profile web add github:usertianziyang/deepseek-harness-prompt-enhancement#<commit-sha>
+```
+
+The repository is private. Authenticate Git access before installing if needed:
+
+```sh
+gh auth setup-git
+```
+
+Verify that the bundle layer is active, then start the Web profile:
+
+```sh
+dsh --profile web --dump-config
+dsh web
+```
+
+The default Web URL is `http://127.0.0.1:3080`.
+
+## Update Or Reload
+
+Install the new commit and restart the running Web process:
+
+```sh
+dsh plugin --profile web add github:usertianziyang/deepseek-harness-prompt-enhancement#<new-commit-sha>
+dsh web
+```
+
+Client assets are discovered from the installed package at startup. A browser refresh is sufficient after the Harness process has restarted.
+
+## Uninstall
+
+```sh
+dsh plugin --profile web remove dsh-prompt-enhancement
+```
 
 ## Behavior
 
 `prompt` mode sends only the trimmed draft to the selected model. `project` mode adds bounded recent Session context and read-only files resolved through the current filesystem provider. The service never sends the result, starts an Agent turn, executes commands, writes files, or appends enhancement records to the Session log.
 
-Enhancement history is stored in the independent `prompt_enhancement` domain. It supports filtering, restore, single deletion, filtered clearing, and clearing all records.
+Enhancement history is stored in the independent `prompt_enhancement` domain. It supports filtering, restore, single deletion, filtered clearing, and clearing all records. Cancellation and failures preserve the original draft and never publish partial model output.
 
-## Verification
+The mode control follows the Web model selector interaction: a compact trigger opens a selected-state menu for Prompt only and Project mode.
 
-Run these checks in the compatible Harness checkout:
+## Package Layout
 
-```sh
-pnpm exec vitest run packages/prompt/prompt-enhancement/tests/prompt-enhancement.spec.ts
-pnpm exec vitest run packages/client/ui-prompt-enhancement/tests/control.client.spec.tsx
-pnpm run build
-```
+- `cordis.patch.yml`: profile layer that mounts the dual-face package; `dsh.client` enrolls its Web Client face.
+- `lib/index.js`: prebuilt Host plugin.
+- `lib/client.js`: prebuilt Web Client plugin with its Remote contribution bundled in.
+- `lib/remote.js`: generated Remote descriptor for inspection and reuse.
+- `packages/`: TypeScript source retained for review and development; it is not required at install time.
+
+The committed `lib/` artifacts make GitHub installation build-script-free. No `prepare` permission or source-tree patch is required.
