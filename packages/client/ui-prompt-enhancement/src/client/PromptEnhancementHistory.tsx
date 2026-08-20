@@ -15,7 +15,7 @@ import css from './PromptEnhancementControl.module.css'
 export type PromptEnhancementSidebarProps = PropsRuntime<'sidebar.footer.action'>
   & PropsLocale<'prompt-enhancement'> & PromptEnhancementInjected
 
-type Confirmation = { kind: 'restore' | 'delete' | 'clear' | 'clearAll'; record?: PromptEnhancementRecord }
+type Confirmation = { kind: 'restore' | 'delete' | 'clear' | 'clearAll'; record?: PromptEnhancementRecord; target?: 'original' | 'enhanced' }
 
 function statusLabel(status: PromptEnhancementStatus, t: PromptEnhancementSidebarProps['t']): string {
   return t(`status.${status}`)
@@ -72,7 +72,7 @@ export function PromptEnhancementHistory({ wide, useSessions, useWorkspaces, t, 
     setConfirmation(undefined)
     if (action === undefined) return
     if (action.kind === 'restore' && action.record !== undefined) {
-      controller.restore(action.record)
+      controller.restore(action.record, action.target ?? 'enhanced')
       return
     }
     if (action.kind === 'delete' && action.record !== undefined) {
@@ -82,10 +82,11 @@ export function PromptEnhancementHistory({ wide, useSessions, useWorkspaces, t, 
     void controller.clear(action.kind === 'clearAll' ? {} : filterRequest()).then(reload, reason => { setError(reason instanceof Error ? reason.message : String(reason)) })
   }
 
-  const requestRestore = (record: PromptEnhancementRecord): void => {
-    if (record.sessionId === undefined || record.enhancedPrompt === undefined) return
-    if (controller.draft(record.sessionId).trim() === '') controller.restore(record)
-    else setConfirmation({ kind: 'restore', record })
+  const requestRestore = (record: PromptEnhancementRecord, target: 'original' | 'enhanced'): void => {
+    if (record.sessionId === undefined) return
+    if (target === 'enhanced' && record.enhancedPrompt === undefined) return
+    if (controller.draft(record.sessionId).trim() === '') controller.restore(record, target)
+    else setConfirmation({ kind: 'restore', record, target })
   }
 
   return (
@@ -116,11 +117,16 @@ export function PromptEnhancementHistory({ wide, useSessions, useWorkspaces, t, 
           <div className={css.detail}>
             {selected === undefined ? <p className={css.empty}>{t('selectRecord')}</p> : <>
               <div className={css.detailActions}>
-                <Button size="sm" variant="primary" icon={<IconSparkle16 />} disabled={selected.enhancedPrompt === undefined || selected.sessionId === undefined} onClick={() => { requestRestore(selected) }}>{t('restore')}</Button>
                 <Button size="sm" variant="outline" icon={<IconTrashOutline16 />} onClick={() => { setConfirmation({ kind: 'delete', record: selected }) }}>{t('delete')}</Button>
               </div>
-              <section><h3>{t('original')}</h3><pre>{selected.originalPrompt}</pre></section>
-              <section><h3>{t('enhanced')}</h3><pre>{selected.enhancedPrompt ?? t('noResult')}</pre></section>
+              <section>
+                <div className={css.sectionHeader}><h3>{t('original')}</h3><Button size="sm" variant="primary" disabled={selected.sessionId === undefined} onClick={() => { requestRestore(selected, 'original') }}>{t('restore')}</Button></div>
+                <pre>{selected.originalPrompt}</pre>
+              </section>
+              <section>
+                <div className={css.sectionHeader}><h3>{t('enhanced')}</h3><Button size="sm" variant="primary" icon={<IconSparkle16 />} disabled={selected.enhancedPrompt === undefined || selected.sessionId === undefined} onClick={() => { requestRestore(selected, 'enhanced') }}>{t('restore')}</Button></div>
+                <pre>{selected.enhancedPrompt ?? t('noResult')}</pre>
+              </section>
               {selected.enhancedPrompt !== undefined && <section><h3>{t('diff')}</h3><div className={css.diff}>{diffWords(selected.originalPrompt, selected.enhancedPrompt).map((part, index) => part.added ? <ins key={index}>{part.value}</ins> : part.removed ? <del key={index}>{part.value}</del> : <span key={index}>{part.value}</span>)}</div></section>}
               <section><h3>{t('trace')}</h3><ol className={css.trace}>{selected.trace.map((step, index) => <li key={`${step.label}-${index}`}><span>{step.label}</span><small>{statusLabel(step.status, t)}{step.reference === undefined ? '' : ` · ${step.reference}`}{step.summary === undefined ? '' : ` · ${step.summary}`}</small></li>)}</ol></section>
             </>}
@@ -128,7 +134,7 @@ export function PromptEnhancementHistory({ wide, useSessions, useWorkspaces, t, 
         </div>
         <div className={css.modalFooter}><Button variant="ghost" onClick={() => { setConfirmation({ kind: 'clearAll' }) }} disabled={records.length === 0}>{t('clearAll')}</Button><Button variant="outline" onClick={() => { controller.close() }}>{t('close')}</Button></div>
       </Modal>
-      <Modal open={confirmation !== undefined} onClose={() => { setConfirmation(undefined) }} title={confirmation?.kind === 'restore' ? t('confirmRestoreTitle') : t('confirmDeleteTitle')} closeLabel={t('close')} description={confirmation?.kind === 'restore' ? t('confirmRestoreDescription') : confirmation?.kind === 'clearAll' ? t('confirmClearAllDescription') : t('confirmDeleteDescription')} footer={<><Button variant="outline" onClick={() => { setConfirmation(undefined) }}>{t('cancel')}</Button><Button variant="primary" onClick={executeConfirmation}>{t('confirm')}</Button></>} />
+      <Modal open={confirmation !== undefined} onClose={() => { setConfirmation(undefined) }} title={confirmation?.kind === 'restore' ? t('confirmRestoreTitle') : t('confirmDeleteTitle')} closeLabel={t('close')} description={confirmation?.kind === 'restore' ? (confirmation.target === 'original' ? t('confirmRestoreOriginalDescription') : t('confirmRestoreDescription')) : confirmation?.kind === 'clearAll' ? t('confirmClearAllDescription') : t('confirmDeleteDescription')} footer={<><Button variant="outline" onClick={() => { setConfirmation(undefined) }}>{t('cancel')}</Button><Button variant="primary" onClick={executeConfirmation}>{t('confirm')}</Button></>} />
     </>
   )
 }

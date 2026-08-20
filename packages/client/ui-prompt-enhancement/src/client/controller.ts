@@ -70,14 +70,17 @@ export class PromptEnhancementController {
     return scope === undefined ? '' : this.conversation().input.for(scope).state.getSnapshot().draft
   }
 
-  /** Restore a completed result to its owning session and navigate there.
-   * @param record - completed history record.
+  /** Restore a record's original or enhanced prompt to its owning session and navigate there.
+   * @param record - history record.
+   * @param target - which prompt text to restore: the original draft or the enhanced result.
    */
-  restore(record: PromptEnhancementRecord): void {
-    if (record.sessionId === undefined || record.enhancedPrompt === undefined) return
+  restore(record: PromptEnhancementRecord, target: 'original' | 'enhanced' = 'enhanced'): void {
+    if (record.sessionId === undefined) return
+    const text = target === 'original' ? record.originalPrompt : record.enhancedPrompt
+    if (text === undefined) return
     const scope = this.sessions().scope(record.sessionId)
     if (scope === undefined) throw new Error(`prompt enhancement session is unavailable: ${record.sessionId}`)
-    this.conversation().input.for(scope).setDraft(record.enhancedPrompt)
+    this.conversation().input.for(scope).setDraft(text)
     this.sessions().open(record.sessionId)
     this.close()
   }

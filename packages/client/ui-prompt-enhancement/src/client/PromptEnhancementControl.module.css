@@ -29,6 +29,8 @@
 .detailActions { position: sticky; top: -16px; z-index: 1; display: flex; justify-content: flex-end; gap: 8px; margin: -16px -16px 14px; padding: 10px 16px; border-bottom: 1px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-1); }
 .detail section { margin: 0 0 18px; }
 .detail h3 { margin: 0 0 7px; color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; }
+.sectionHeader { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sectionHeader h3 { margin: 0; }
 .detail pre, .diff { overflow-wrap: anywhere; margin: 0; padding: 10px; border-radius: 6px; background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); font: inherit; font-size: 13px; line-height: 20px; white-space: pre-wrap; }
 .diff ins { background: var(--dsw-alias-status-success-bg); text-decoration: none; }
 .diff del { background: var(--dsw-alias-status-error-bg); }
