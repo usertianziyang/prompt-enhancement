@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-19-prompt-enhancement.md
-2026-08-19-prompt-enhancement.md: 9afb364ae965e2d7be49a2b69ccd7ad251681ad4
-2026-08-19-prompt-enhancement.zh.md: d1dea54dfe3f83d5e8eec13134e182db883d6c79
+2026-08-19-prompt-enhancement.md: 66af3a5ae1b687ebd515434afc96f02bf35557fc
+2026-08-19-prompt-enhancement.zh.md: 4984acc0d570d3d9f36d677f14689183f223e24e

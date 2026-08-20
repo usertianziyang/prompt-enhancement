@@ -6,15 +6,15 @@ English | [中文](2026-08-19-prompt-enhancement.zh.md)
 
 ## Problem
 
-The composer needs a user-controlled way to turn an unfinished draft into a precise coding-agent prompt without sending it, starting an agent turn, or mixing the transformation into the Session log. Users also need an independent durable history that can explain which project references were used and restore a previous result without losing a newer draft.
+The composer needs a user-controlled way to turn an unfinished draft into a precise coding-agent prompt without sending it, starting an agent turn, or mixing the transformation into the Session log. Users also need an independent durable history for inspecting previous requests and the project references they used.
 
 ## Decision
 
-The Host package `@deepseek-ai/dsh-prompt-enhancement` owns one unary Typert Remote service and the `prompt_enhancement` storage domain. `prompt` mode sends only the trimmed draft. `project` mode adds bounded recent Session messages and read-only files resolved through the Agent-scoped filesystem provider. It considers root `AGENTS.md`, root `README.md`, and path-like backtick references from the draft, confines targets to the Session cwd, and never executes commands or writes files.
+The package `dsh-prompt-enhancement` owns one unary Typert Remote service and the `prompt_enhancement` storage domain. `prompt` mode sends only the trimmed draft. `project` mode adds bounded recent Session messages and read-only files resolved through the Agent-scoped filesystem provider. It considers root `AGENTS.md`, root `README.md`, and path-like backtick references from the draft, confines targets to the Session cwd, and never executes commands or writes files.
 
 The request uses the current Session header's provider, model, and reasoning effort, with the Agent options as the pre-header fallback. The model receives a fixed rewriting system prompt and a separately configured output-token limit. Success, failure, and cancellation each persist an immutable record; failed or cancelled requests reject after the record is written. Records retain original and completed prompt text, status, Session/Workspace references, timestamps, and bounded trace metadata, but not complete project files or hidden reasoning.
 
-The browser package contributes the composer control, a Session-header shortcut, and a global sidebar history entry backed by one shared modal. The control uses `draftRev` plus the original draft as a compare-and-set before replacing the composer. History supports Session/Workspace/mode/status filters, detail/diff/trace views, restore confirmation for non-empty drafts, single deletion, filtered clearing, and clearing all records.
+The browser face contributes the composer control, a Session-header shortcut, and a global sidebar history entry backed by one shared modal. The control uses `draftRev` plus the original draft as a compare-and-set before replacing the composer, then exposes Restore only in the composer. Failures open a modal. History is read-only apart from deletion and clearing; it combines Workspace membership, Session-title search, mode, and status filters and has no restore action.
 
 ## Alternatives considered
 
@@ -32,4 +32,4 @@ Enhancement calls are independent model requests and do not alter the active Age
 
 ## Verification
 
-Host tests cover prompt-only isolation, bounded project reads, cancellation during context preparation, filtered history, and clear semantics. Client tests cover successful replacement, draft compare-and-set, and cancellation without an inline error. TypeScript builds cover the Host package and browser package.
+Host tests cover prompt-only isolation, bounded project reads, cancellation during context preparation, filtered history, and clear semantics. Client tests cover successful replacement and restore, draft compare-and-set, modal failures, cancellation, read-only history, Workspace membership, and Session-title search. TypeScript and npm-package checks cover both faces of the single package.

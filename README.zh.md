@@ -6,25 +6,23 @@
 
 ## 环境要求
 
-- DeepSeek Harness（兼容多个版本）
+- DeepSeek Harness `0.1.0-rc.7`
 - Node.js `^22.19.0` 或 `>=24.0.0`
 - 目标 Web 配置（profile）中已配置的模型提供方（provider）
 
 ## 安装
 
-将组合包安装到官方 `web` 配置中：
+将已发布的 npm 包安装到官方 `web` 配置中：
 
 ```sh
-dsh plugin --profile web add github:usertianziyang/prompt-enhancement
+dsh plugin --profile web add dsh-prompt-enhancement@latest
 ```
 
-如需可复现的安装，可固定到某个已审核的提交（commit）：
+如需可复现的安装，可固定到已审核的包版本：
 
 ```sh
-dsh plugin --profile web add github:usertianziyang/prompt-enhancement#<commit-sha>
+dsh plugin --profile web add dsh-prompt-enhancement@0.1.0
 ```
-
-仓库已公开，可直接安装，无需额外的 Git 认证。
 
 确认组合包层已激活，然后启动 Web 配置：
 
@@ -37,10 +35,10 @@ dsh web
 
 ## 更新或重载
 
-安装新的提交并重启正在运行的 Web 进程：
+安装最新包并重启正在运行的 Web 进程：
 
 ```sh
-dsh plugin --profile web add github:usertianziyang/prompt-enhancement#<new-commit-sha>
+dsh plugin --profile web add dsh-prompt-enhancement@latest
 dsh web
 ```
 
@@ -65,9 +63,29 @@ dsh plugin --profile web remove dsh-prompt-enhancement
 ## 包结构
 
 - `cordis.patch.yml`：挂载双面（dual-face）包的配置层；`dsh.client` 会登记其 Web Client 面（face）。
-- `lib/index.js`：预构建的 Host 插件。
-- `lib/client.js`：预构建的 Web Client 插件，其中打包了它的 Remote 贡献。
-- `lib/remote.js`：生成的 Remote 描述符，供检查与复用。
-- `packages/`：保留的 TypeScript 源码，供审查与开发使用；安装时并不需要它。
+- `src/`：由 Git 跟踪、供审查与开发的 TypeScript 源码。
+- `lib/index.js`：构建生成并包含在 npm 包中的 Host 插件。
+- `lib/client.js`：构建生成并包含在 npm 包中的 Web Client 插件，其中打包了 Remote 贡献。
+- `lib/remote.js` 与 `lib/typert.js`：构建生成并包含在 npm 包中的 Remote 与 Typert 描述符。
+- `lib/types/`：构建生成并包含在 npm 包中的公开类型声明。
 
-已提交的 `lib/` 产物使 GitHub 安装无需构建脚本，无需 `prepare` 权限或源码树补丁（patch）。
+`lib/` 会被 Git 忽略。CI 与 Release Workflow 会先从源码构建再打包，`package.json#files` 则保证发布到 npm 的安装包仍包含完整运行产物。
+
+## 开发
+
+```sh
+git clone https://github.com/usertianziyang/deepseek-harness-prompt-enhancement.git
+cd deepseek-harness-prompt-enhancement
+pnpm install
+pnpm typecheck
+pnpm test
+pnpm check:package
+```
+
+`pnpm install` 会通过 `prepare` 自动构建。修改源码后可再次运行 `pnpm build`；`pnpm pack` 会生成与 CI 上传内容相同的可安装压缩包。
+
+## 发布
+
+CI Workflow 会执行类型检查、构建、测试、npm 文件清单验证，并上传打包后的 `.tgz` Artifact。发布标签为 `vX.Y.Z` 的 GitHub Release 后，Release Workflow 会校验标签与 `package.json#version` 一致，再通过 GitHub OIDC 携带 provenance 发布到 npm。
+
+第一次自动发布前，需要在 npm Trusted Publishing 中绑定用户 `usertianziyang`、仓库 `deepseek-harness-prompt-enhancement` 与工作流 `release.yml`。手动运行 Release Workflow 只会验证并执行 npm dry run，不会真正发布。

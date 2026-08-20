@@ -6,25 +6,23 @@ An installable DeepSeek Harness Web bundle that rewrites a draft into a precise 
 
 ## Requirements
 
-- DeepSeek Harness (compatible with multiple versions)
+- DeepSeek Harness `0.1.0-rc.7`
 - Node.js `^22.19.0` or `>=24.0.0`
 - A configured model provider in the target Web profile
 
 ## Install
 
-Install the bundle into the official `web` profile:
+Install the published npm package into the official `web` profile:
 
 ```sh
-dsh plugin --profile web add github:usertianziyang/prompt-enhancement
+dsh plugin --profile web add dsh-prompt-enhancement@latest
 ```
 
-For a reproducible installation, pin a reviewed commit:
+For a reproducible installation, pin a reviewed package version:
 
 ```sh
-dsh plugin --profile web add github:usertianziyang/prompt-enhancement#<commit-sha>
+dsh plugin --profile web add dsh-prompt-enhancement@0.1.0
 ```
-
-The repository is public and can be installed directly without additional Git authentication.
 
 Verify that the bundle layer is active, then start the Web profile:
 
@@ -37,10 +35,10 @@ The default Web URL is `http://127.0.0.1:3080`.
 
 ## Update Or Reload
 
-Install the new commit and restart the running Web process:
+Install the latest package and restart the running Web process:
 
 ```sh
-dsh plugin --profile web add github:usertianziyang/prompt-enhancement#<new-commit-sha>
+dsh plugin --profile web add dsh-prompt-enhancement@latest
 dsh web
 ```
 
@@ -65,9 +63,29 @@ The mode control follows the Web model selector interaction: a compact trigger o
 ## Package Layout
 
 - `cordis.patch.yml`: profile layer that mounts the dual-face package; `dsh.client` enrolls its Web Client face.
-- `lib/index.js`: prebuilt Host plugin.
-- `lib/client.js`: prebuilt Web Client plugin with its Remote contribution bundled in.
-- `lib/remote.js`: generated Remote descriptor for inspection and reuse.
-- `packages/`: TypeScript source retained for review and development; it is not required at install time.
+- `src/`: reviewed TypeScript source tracked by Git.
+- `lib/index.js`: generated Host plugin included in the npm tarball.
+- `lib/client.js`: generated Web Client plugin with its Remote contribution bundled in.
+- `lib/remote.js` and `lib/typert.js`: generated Remote and Typert descriptors included in the npm tarball.
+- `lib/types/`: generated public declarations included in the npm tarball.
 
-The committed `lib/` artifacts make GitHub installation build-script-free. No `prepare` permission or source-tree patch is required.
+`lib/` is intentionally ignored by Git. CI and the Release workflow build it from source before packing, while `package.json#files` ensures the complete runtime output is present in the published npm package.
+
+## Development
+
+```sh
+git clone https://github.com/usertianziyang/deepseek-harness-prompt-enhancement.git
+cd deepseek-harness-prompt-enhancement
+pnpm install
+pnpm typecheck
+pnpm test
+pnpm check:package
+```
+
+`pnpm install` runs the `prepare` build. Run `pnpm build` again after source changes. `pnpm pack` creates the same installable tarball that CI uploads.
+
+## Release
+
+The CI workflow checks types, builds, tests, verifies the npm file list, and uploads a packed `.tgz` artifact. Publishing a GitHub Release tagged `vX.Y.Z` runs the Release workflow; the tag must match `package.json#version`, and npm publishing uses GitHub OIDC with provenance.
+
+Before the first automated release, configure npm Trusted Publishing for user `usertianziyang`, repository `deepseek-harness-prompt-enhancement`, and workflow `release.yml`. A manually dispatched Release workflow performs validation and an npm dry run only; it never publishes.

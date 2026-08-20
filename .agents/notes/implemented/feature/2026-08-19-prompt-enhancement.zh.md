@@ -6,15 +6,15 @@ Status: implemented
 
 ## 问题
 
-composer 需要一种由用户控制的方式，把未完成草稿变成更精确的编程智能体提示词，同时不发送草稿、不启动 agent 轮次，也不把转换混入 Session 日志。用户还需要独立且持久的历史，以便知道使用了哪些项目引用，并在不丢失更新草稿的情况下恢复旧结果。
+composer 需要一种由用户控制的方式，把未完成草稿变成更精确的编程智能体提示词，同时不发送草稿、不启动 agent 轮次，也不把转换混入 Session 日志。用户还需要独立且持久的历史，用于查看以往请求及其使用的项目引用。
 
 ## 决策
 
-Host 包 `@deepseek-ai/dsh-prompt-enhancement` 拥有一个一元 Typert Remote 服务和 `prompt_enhancement` 存储域。`prompt` 模式只发送 trim 后的草稿。`project` 模式通过 Agent 作用域文件系统提供方加入有界的最近 Session 消息和只读文件；它考虑根目录 `AGENTS.md`、根目录 `README.md` 与草稿中的反引号路径形引用，把目标限制在 Session cwd 内，并且不运行命令或写入文件。
+单包 `dsh-prompt-enhancement` 拥有一个一元 Typert Remote 服务和 `prompt_enhancement` 存储域。`prompt` 模式只发送 trim 后的草稿。`project` 模式通过 Agent 作用域文件系统提供方加入有界的最近 Session 消息和只读文件；它考虑根目录 `AGENTS.md`、根目录 `README.md` 与草稿中的反引号路径形引用，把目标限制在 Session cwd 内，并且不运行命令或写入文件。
 
 请求使用当前 Session header 中的提供方、模型与推理强度；header 尚不存在时回退到 Agent options。模型接收固定的改写系统提示词和独立配置的输出 token 上限。成功、失败和取消都会持久化不可变记录；失败或取消会在记录写入后 reject。记录保留原始与完成后的提示词、状态、Session/Workspace 引用、时间戳和有界轨迹元数据，但不保存完整项目文件或隐藏推理。
 
-浏览器包贡献 composer 控件、Session header 快捷入口和全局 sidebar 历史入口，三者共享一个 modal。控件在替换 composer 前同时使用 `draftRev` 与原始草稿执行 compare-and-set。历史支持 Session/Workspace/模式/状态筛选、详情/差异/轨迹、非空草稿恢复确认、单条删除、按筛选清空和全部清空。
+浏览器端贡献 composer 控件、Session header 快捷入口和全局 sidebar 历史入口，三者共享一个 modal。控件在替换 composer 前同时使用 `draftRev` 与原始草稿执行 compare-and-set，恢复操作只出现在 composer；增强失败通过弹窗显示。历史除删除与清空外只读，支持组合使用工作区成员关系、会话标题搜索、模式与状态筛选，不提供恢复操作。
 
 ## 曾考虑的替代方案
 
@@ -32,4 +32,4 @@ Host 包 `@deepseek-ai/dsh-prompt-enhancement` 拥有一个一元 Typert Remote 
 
 ## 验证
 
-Host 测试覆盖仅提示词隔离、有界项目读取、上下文准备阶段取消、历史筛选与清空语义。客户端测试覆盖成功替换、草稿 compare-and-set 和取消时不显示行内错误。类型检查覆盖 Host 包与浏览器包。
+Host 测试覆盖仅提示词隔离、有界项目读取、上下文准备阶段取消、历史筛选与清空语义。客户端测试覆盖成功替换与恢复、草稿 compare-and-set、失败弹窗、取消、只读历史、工作区成员关系和会话标题搜索。TypeScript 与 npm 包检查覆盖该单包的 Host 与浏览器两端。
