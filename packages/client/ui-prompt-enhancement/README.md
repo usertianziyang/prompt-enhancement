@@ -4,9 +4,9 @@ English | [中文](README.zh.md)
 
 Browser UI for `@deepseek-ai/dsh-prompt-enhancement`. It contributes a model-selector-style mode menu and icon actions to `conversation.input.right`, a current-Session history shortcut to `conversation.session.header.actions`, and a global history trigger plus the shared modal to `sidebar.footer.action`.
 
-Enhancement is single-flight per mounted composer control and cancellable with `AbortController`. The control snapshots the draft text and `draftRev`; completion replaces the composer only when both still match. A concurrently edited draft remains untouched and the completed result stays in durable history. Failure and cancellation never clear or replace the draft.
+Enhancement is single-flight per mounted composer control and cancellable with `AbortController`. The control snapshots the draft text and `draftRev`; completion replaces the composer only when both still match. After success, the action changes to Restore and can return the current composer to its pre-enhancement draft. A concurrently edited draft remains untouched and the completed result stays in durable history. Failures appear in a modal; failure and cancellation never clear or replace the draft.
 
-The shared history modal filters records by Session, Workspace, mode, and status. Its details show the original text, completed result, word diff, and processing trace. Users can restore a completed result, delete one record, clear the filtered set, or clear all records. Restoring to a non-empty target draft requires explicit confirmation and opens the owning Session after replacement.
+The shared history modal searches Session titles and combines that query with Workspace, mode, and status filters. A Workspace includes all of its Sessions. Details are display-only and show the original text, completed result, word diff, and processing trace; there is no restore action. Users can delete one record, clear the filtered set, or clear all records.
 
 ## Model Experience
 
@@ -22,7 +22,7 @@ The UI adds no model tokens beyond the Host enhancement request documented by th
 
 #### KV Cache effect
 
-Opening, filtering, restoring, or deleting history does not issue a model request and has no provider-cache effect.
+Opening, filtering, or deleting history does not issue a model request and has no provider-cache effect.
 
 ## Known Limitations and Deferred Work
 

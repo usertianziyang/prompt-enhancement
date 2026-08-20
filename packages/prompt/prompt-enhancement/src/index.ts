@@ -163,9 +163,7 @@ export class PromptEnhancementService extends TypertRemoteService {
     const id = randomUUID() as PromptEnhancementRecord['id']
     const now = Date.now()
     const trace: PromptEnhancementTraceStep[] = []
-    const workspaceId = request.mode === 'project'
-      ? this.ctx.workspaceRegistry.list().find(workspace => workspace.sessionIds.includes(agent.id))?.id
-      : undefined
+    const workspaceId = this.ctx.workspaceRegistry.list().find(workspace => workspace.sessionIds.includes(agent.id))?.id
     try {
       const workspace = request.mode === 'project' ? await this.readProjectContext(agent, prompt, signal, trace) : undefined
       const context = request.mode === 'prompt'

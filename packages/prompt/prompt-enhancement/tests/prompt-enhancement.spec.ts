@@ -81,7 +81,7 @@ function agent(ctx: Context, rawId = 'prompt-enhancement-test'): Agent {
 }
 
 describe('PromptEnhancementService', () => {
-  it('sends prompt mode only the draft and never reads session or workspace context', async () => {
+  it('sends prompt mode only the draft and records workspace membership without reading its context', async () => {
     const touched: string[] = []
     const { ctx, adapter, listWorkspaces } = await harness({ maxOutputTokens: 77 }, fakeFs({}, touched))
     const subject = agent(ctx)
@@ -93,7 +93,7 @@ describe('PromptEnhancementService', () => {
     expect(inputText(adapter.requests[0]!)).toBe('Draft:\nFix the bug')
     expect(adapter.requests[0]!.maxTokens).toBe(77)
     expect(touched).toEqual([])
-    expect(listWorkspaces).not.toHaveBeenCalled()
+    expect(listWorkspaces).toHaveBeenCalledOnce()
   })
 
   it('reads only bounded standard and explicitly mentioned workspace files', async () => {
@@ -124,11 +124,13 @@ describe('PromptEnhancementService', () => {
   })
 
   it('filters and clears independent history records', async () => {
-    const { ctx } = await harness({}, fakeFs({}, []))
+    const { ctx, listWorkspaces } = await harness({}, fakeFs({}, []))
     const subject = agent(ctx, 'history')
+    listWorkspaces.mockReturnValue([{ id: 'workspace', sessionIds: [subject.id] }] as never)
     await ctx.promptEnhancement.enhance(subject, { prompt: 'one', mode: 'prompt' }, new AbortController().signal)
     await ctx.promptEnhancement.enhance(subject, { prompt: 'two', mode: 'project' }, new AbortController().signal)
 
+    expect(ctx.promptEnhancement.list({ workspaceId: 'workspace' as never }).records).toHaveLength(2)
     expect(ctx.promptEnhancement.list({ mode: 'prompt' }).records).toHaveLength(1)
     await expect(ctx.promptEnhancement.clear({ mode: 'prompt' })).resolves.toEqual({ deleted: 1 })
     expect(ctx.promptEnhancement.list({}).records.map(record => record.mode)).toEqual(['project'])

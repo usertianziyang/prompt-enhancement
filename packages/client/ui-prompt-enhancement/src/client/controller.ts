@@ -1,8 +1,6 @@
-/** Shared browser controller for the three prompt-enhancement entry points. */
+/** Shared browser controller for the prompt-enhancement history entry points. */
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import type { ClientContext, SessionId } from '@deepseek-ai/dsh-client-runtime/client'
-import type { ISessions } from '@deepseek-ai/dsh-client-runtime/client'
-import type { IConversation } from '@deepseek-ai/dsh-client-ui-conversation/client'
 import type {
   PromptEnhancementClearRequest, PromptEnhancementId, PromptEnhancementListRequest,
   PromptEnhancementRecord,
@@ -13,7 +11,7 @@ interface HistoryViewState {
   readonly sessionId?: SessionId
 }
 
-/** One shared modal state plus remote and draft operations. */
+/** One shared history modal state plus its remote operations. */
 export class PromptEnhancementController {
   /** Shared open/closed state consumed by every history entry point. */
   readonly view = createSnapshotStore<HistoryViewState>({ open: false })
@@ -61,39 +59,4 @@ export class PromptEnhancementController {
     return result.value.deleted
   }
 
-  /** Read the target session's current draft without staging it.
-   * @param sessionId - target Session identity.
-   * @returns current draft text, or empty text when the session is unavailable.
-   */
-  draft(sessionId: SessionId): string {
-    const scope = this.sessions().scope(sessionId)
-    return scope === undefined ? '' : this.conversation().input.for(scope).state.getSnapshot().draft
-  }
-
-  /** Restore a record's original or enhanced prompt to its owning session and navigate there.
-   * @param record - history record.
-   * @param target - which prompt text to restore: the original draft or the enhanced result.
-   */
-  restore(record: PromptEnhancementRecord, target: 'original' | 'enhanced' = 'enhanced'): void {
-    if (record.sessionId === undefined) return
-    const text = target === 'original' ? record.originalPrompt : record.enhancedPrompt
-    if (text === undefined) return
-    const scope = this.sessions().scope(record.sessionId)
-    if (scope === undefined) throw new Error(`prompt enhancement session is unavailable: ${record.sessionId}`)
-    this.conversation().input.for(scope).setDraft(text)
-    this.sessions().open(record.sessionId)
-    this.close()
-  }
-
-  private sessions(): ISessions {
-    const sessions = this.ctx.get('sessions') as ISessions | undefined
-    if (sessions === undefined) throw new Error('prompt enhancement sessions service is unavailable')
-    return sessions
-  }
-
-  private conversation(): IConversation {
-    const conversation = this.ctx.get('conversation') as IConversation | undefined
-    if (conversation === undefined) throw new Error('prompt enhancement conversation service is unavailable')
-    return conversation
-  }
 }

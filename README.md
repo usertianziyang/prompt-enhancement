@@ -56,7 +56,9 @@ dsh plugin --profile web remove dsh-prompt-enhancement
 
 `prompt` mode sends only the trimmed draft to the selected model. `project` mode adds bounded recent Session context and read-only files resolved through the current filesystem provider. The service never sends the result, starts an Agent turn, executes commands, writes files, or appends enhancement records to the Session log.
 
-Enhancement history is stored in the independent `prompt_enhancement` domain. It supports filtering, restore, single deletion, filtered clearing, and clearing all records. Cancellation and failures preserve the original draft and never publish partial model output.
+After enhancement completes, the composer action changes to Restore so the current input can be returned to its pre-enhancement draft. Enhancement failures are shown in a modal. Cancellation and failures never clear or replace the draft or publish partial model output.
+
+Enhancement history is stored in the independent `prompt_enhancement` domain and is display-only: it has no restore action. History supports combined Workspace, Session-title, mode, and status filters, plus single deletion, filtered clearing, and clearing all records. A Workspace filter includes every Session belonging to that Workspace.
 
 The mode control follows the Web model selector interaction: a compact trigger opens a selected-state menu for Prompt only and Project mode.
 

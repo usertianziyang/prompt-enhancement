@@ -1,24 +1,26 @@
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react'
 import { diffWords } from 'diff'
 import {
-  Button, IconArchiveOutline20, IconSparkle16, IconTrashOutline16, Modal, Tooltip,
+  Button, IconArchiveOutline20, IconTrashOutline16, Modal, Tooltip,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type {
-  PromptEnhancementListRequest, PromptEnhancementMode, PromptEnhancementRecord,
-  PromptEnhancementStatus, WorkspaceId,
+  PromptEnhancementMode, PromptEnhancementRecord, PromptEnhancementStatus,
 } from '@deepseek-ai/dsh-prompt-enhancement/client'
-import type { SessionId } from '@deepseek-ai/dsh-client-runtime/client'
 import type { PromptEnhancementInjected } from './index.ts'
 import css from './PromptEnhancementControl.module.css'
 
 export type PromptEnhancementSidebarProps = PropsRuntime<'sidebar.footer.action'>
   & PropsLocale<'prompt-enhancement'> & PromptEnhancementInjected
 
-type Confirmation = { kind: 'restore' | 'delete' | 'clear' | 'clearAll'; record?: PromptEnhancementRecord; target?: 'original' | 'enhanced' }
+type Confirmation = { kind: 'delete' | 'clear' | 'clearAll'; record?: PromptEnhancementRecord }
 
 function statusLabel(status: PromptEnhancementStatus, t: PromptEnhancementSidebarProps['t']): string {
   return t(`status.${status}`)
+}
+
+function recordWorkspaceId(record: PromptEnhancementRecord, workspaces: readonly { workspaceId: string; sessionIds: readonly string[] }[]): string | undefined {
+  return record.workspaceId ?? workspaces.find(workspace => record.sessionId !== undefined && workspace.sessionIds.includes(record.sessionId))?.workspaceId
 }
 
 /** Sidebar trigger and the single shared history modal. */
@@ -28,7 +30,8 @@ export function PromptEnhancementHistory({ wide, useSessions, useWorkspaces, t, 
   const workspaces = useWorkspaces(state => state.items)
   const [records, setRecords] = useState<readonly PromptEnhancementRecord[]>([])
   const [selectedId, setSelectedId] = useState<string>()
-  const [sessionId, setSessionId] = useState('')
+  const [sessionScopeId, setSessionScopeId] = useState('')
+  const [sessionQuery, setSessionQuery] = useState('')
   const [workspaceId, setWorkspaceId] = useState('')
   const [mode, setMode] = useState<PromptEnhancementMode | ''>('')
   const [status, setStatus] = useState<PromptEnhancementStatus | ''>('')
@@ -45,48 +48,42 @@ export function PromptEnhancementHistory({ wide, useSessions, useWorkspaces, t, 
 
   useEffect(() => {
     if (!view.open) return
-    setSessionId(view.sessionId ?? '')
+    setSessionScopeId(view.sessionId ?? '')
+    setSessionQuery(view.sessionId === undefined ? '' : sessions.byId[view.sessionId]?.displayTitle ?? view.sessionId)
     setWorkspaceId('')
     setMode('')
     setStatus('')
     reload()
   }, [view.open, view.sessionId])
 
-  const filtered = useMemo(() => records.filter(record =>
-    (sessionId === '' || record.sessionId === sessionId)
-    && (workspaceId === '' || record.workspaceId === workspaceId)
-    && (mode === '' || record.mode === mode)
-    && (status === '' || record.status === status)), [mode, records, sessionId, status, workspaceId])
+  const filtered = useMemo(() => {
+    const query = sessionQuery.trim().toLocaleLowerCase()
+    return records.filter(record =>
+      (sessionScopeId !== ''
+        ? record.sessionId === sessionScopeId
+        : query === '' || (record.sessionId === undefined ? '' : sessions.byId[record.sessionId]?.displayTitle ?? record.sessionId).toLocaleLowerCase().includes(query))
+      && (workspaceId === '' || recordWorkspaceId(record, workspaces) === workspaceId)
+      && (mode === '' || record.mode === mode)
+      && (status === '' || record.status === status))
+  }, [mode, records, sessionQuery, sessionScopeId, sessions.byId, status, workspaceId, workspaces])
   const selected = filtered.find(record => record.id === selectedId) ?? filtered[0]
-  const sessionOptions = useMemo(() => [...new Set(records.flatMap(record => record.sessionId === undefined ? [] : [record.sessionId]))], [records])
-  const workspaceOptions = useMemo(() => [...new Set(records.flatMap(record => record.workspaceId === undefined ? [] : [record.workspaceId]))], [records])
-  const filterRequest = (): PromptEnhancementListRequest => ({
-    ...(sessionId === '' ? {} : { sessionId: sessionId as SessionId }),
-    ...(workspaceId === '' ? {} : { workspaceId: workspaceId as WorkspaceId }),
-    ...(mode === '' ? {} : { mode }),
-    ...(status === '' ? {} : { status }),
-  })
+  const workspaceOptions = useMemo(() => [...new Set(records.flatMap(record => {
+    const id = recordWorkspaceId(record, workspaces)
+    return id === undefined ? [] : [id]
+  }))], [records, workspaces])
 
   const executeConfirmation = (): void => {
     const action = confirmation
     setConfirmation(undefined)
     if (action === undefined) return
-    if (action.kind === 'restore' && action.record !== undefined) {
-      controller.restore(action.record, action.target ?? 'enhanced')
-      return
-    }
     if (action.kind === 'delete' && action.record !== undefined) {
       void controller.remove(action.record.id).then(reload, reason => { setError(reason instanceof Error ? reason.message : String(reason)) })
       return
     }
-    void controller.clear(action.kind === 'clearAll' ? {} : filterRequest()).then(reload, reason => { setError(reason instanceof Error ? reason.message : String(reason)) })
-  }
-
-  const requestRestore = (record: PromptEnhancementRecord, target: 'original' | 'enhanced'): void => {
-    if (record.sessionId === undefined) return
-    if (target === 'enhanced' && record.enhancedPrompt === undefined) return
-    if (controller.draft(record.sessionId).trim() === '') controller.restore(record, target)
-    else setConfirmation({ kind: 'restore', record, target })
+    const request = action.kind === 'clearAll'
+      ? controller.clear({})
+      : Promise.all(filtered.map(record => controller.remove(record.id)))
+    void request.then(reload, reason => { setError(reason instanceof Error ? reason.message : String(reason)) })
   }
 
   return (
@@ -99,7 +96,7 @@ export function PromptEnhancementHistory({ wide, useSessions, useWorkspaces, t, 
       </Tooltip>
       <Modal open={view.open} onClose={() => { controller.close() }} title={t('historyTitle')} closeLabel={t('close')} className={css.historyModal ?? ''} contentClassName={css.historyContent ?? ''}>
         <div className={css.filters}>
-          <label>{t('filter.session')}<select value={sessionId} onChange={event => { setSessionId(event.currentTarget.value) }}><option value="">{t('filter.all')}</option>{sessionOptions.map(id => <option key={id} value={id}>{sessions.byId[id]?.displayTitle ?? id}</option>)}</select></label>
+          <label>{t('filter.session')}<input type="search" value={sessionQuery} placeholder={t('filter.sessionPlaceholder')} onChange={event => { setSessionScopeId(''); setSessionQuery(event.currentTarget.value) }} /></label>
           <label>{t('filter.workspace')}<select value={workspaceId} onChange={event => { setWorkspaceId(event.currentTarget.value) }}><option value="">{t('filter.all')}</option>{workspaceOptions.map(id => <option key={id} value={id}>{workspaces.find(item => item.workspaceId === id)?.title ?? id}</option>)}</select></label>
           <label>{t('filter.mode')}<select value={mode} onChange={event => { setMode(event.currentTarget.value as PromptEnhancementMode | '') }}><option value="">{t('filter.all')}</option><option value="prompt">{t('prompt')}</option><option value="project">{t('project')}</option></select></label>
           <label>{t('filter.status')}<select value={status} onChange={event => { setStatus(event.currentTarget.value as PromptEnhancementStatus | '') }}><option value="">{t('filter.all')}</option><option value="completed">{t('status.completed')}</option><option value="failed">{t('status.failed')}</option><option value="cancelled">{t('status.cancelled')}</option></select></label>
@@ -120,11 +117,11 @@ export function PromptEnhancementHistory({ wide, useSessions, useWorkspaces, t, 
                 <Button size="sm" variant="outline" icon={<IconTrashOutline16 />} onClick={() => { setConfirmation({ kind: 'delete', record: selected }) }}>{t('delete')}</Button>
               </div>
               <section>
-                <div className={css.sectionHeader}><h3>{t('original')}</h3><Button size="sm" variant="primary" disabled={selected.sessionId === undefined} onClick={() => { requestRestore(selected, 'original') }}>{t('restore')}</Button></div>
+                <h3>{t('original')}</h3>
                 <pre>{selected.originalPrompt}</pre>
               </section>
               <section>
-                <div className={css.sectionHeader}><h3>{t('enhanced')}</h3><Button size="sm" variant="primary" icon={<IconSparkle16 />} disabled={selected.enhancedPrompt === undefined || selected.sessionId === undefined} onClick={() => { requestRestore(selected, 'enhanced') }}>{t('restore')}</Button></div>
+                <h3>{t('enhanced')}</h3>
                 <pre>{selected.enhancedPrompt ?? t('noResult')}</pre>
               </section>
               {selected.enhancedPrompt !== undefined && <section><h3>{t('diff')}</h3><div className={css.diff}>{diffWords(selected.originalPrompt, selected.enhancedPrompt).map((part, index) => part.added ? <ins key={index}>{part.value}</ins> : part.removed ? <del key={index}>{part.value}</del> : <span key={index}>{part.value}</span>)}</div></section>}
@@ -134,7 +131,7 @@ export function PromptEnhancementHistory({ wide, useSessions, useWorkspaces, t, 
         </div>
         <div className={css.modalFooter}><Button variant="ghost" onClick={() => { setConfirmation({ kind: 'clearAll' }) }} disabled={records.length === 0}>{t('clearAll')}</Button><Button variant="outline" onClick={() => { controller.close() }}>{t('close')}</Button></div>
       </Modal>
-      <Modal open={confirmation !== undefined} onClose={() => { setConfirmation(undefined) }} title={confirmation?.kind === 'restore' ? t('confirmRestoreTitle') : t('confirmDeleteTitle')} closeLabel={t('close')} description={confirmation?.kind === 'restore' ? (confirmation.target === 'original' ? t('confirmRestoreOriginalDescription') : t('confirmRestoreDescription')) : confirmation?.kind === 'clearAll' ? t('confirmClearAllDescription') : t('confirmDeleteDescription')} footer={<><Button variant="outline" onClick={() => { setConfirmation(undefined) }}>{t('cancel')}</Button><Button variant="primary" onClick={executeConfirmation}>{t('confirm')}</Button></>} />
+      <Modal open={confirmation !== undefined} onClose={() => { setConfirmation(undefined) }} title={t('confirmDeleteTitle')} closeLabel={t('close')} description={confirmation?.kind === 'clearAll' ? t('confirmClearAllDescription') : t('confirmDeleteDescription')} footer={<><Button variant="outline" onClick={() => { setConfirmation(undefined) }}>{t('cancel')}</Button><Button variant="primary" onClick={executeConfirmation}>{t('confirm')}</Button></>} />
     </>
   )
 }

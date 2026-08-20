@@ -16,7 +16,7 @@
 .historyContent { display: flex; min-height: 0; flex: 1; flex-direction: column; }
 .filters { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; padding: 14px 0; }
 .filters label { display: flex; min-width: 0; flex-direction: column; gap: 4px; color: var(--dsw-alias-label-secondary); font-size: 11px; }
-.filters select { width: 100%; height: 30px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 6px; background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); }
+.filters input, .filters select { width: 100%; height: 30px; border: 1px solid var(--dsw-alias-border-l2); border-radius: 6px; background: var(--dsw-alias-bg-layer-1); color: var(--dsw-alias-label-primary); }
 .error { margin: 0 0 10px; color: var(--dsw-alias-status-error); font-size: 12px; }
 .historyLayout { display: grid; min-height: 0; flex: 1; grid-template-columns: minmax(250px, 32%) minmax(0, 1fr); overflow: hidden; border: 1px solid var(--dsw-alias-border-l2); border-radius: 8px; }
 .historyList { min-height: 0; overflow-y: auto; border-right: 1px solid var(--dsw-alias-border-l2); }
@@ -29,8 +29,6 @@
 .detailActions { position: sticky; top: -16px; z-index: 1; display: flex; justify-content: flex-end; gap: 8px; margin: -16px -16px 14px; padding: 10px 16px; border-bottom: 1px solid var(--dsw-alias-border-l2); background: var(--dsw-alias-bg-layer-1); }
 .detail section { margin: 0 0 18px; }
 .detail h3 { margin: 0 0 7px; color: var(--dsw-alias-label-secondary); font-size: 12px; font-weight: 600; }
-.sectionHeader { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-.sectionHeader h3 { margin: 0; }
 .detail pre, .diff { overflow-wrap: anywhere; margin: 0; padding: 10px; border-radius: 6px; background: var(--dsw-alias-bg-layer-2); color: var(--dsw-alias-label-primary); font: inherit; font-size: 13px; line-height: 20px; white-space: pre-wrap; }
 .diff ins { background: var(--dsw-alias-status-success-bg); text-decoration: none; }
 .diff del { background: var(--dsw-alias-status-error-bg); }
