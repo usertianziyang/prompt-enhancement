@@ -1,5 +1,5 @@
 {
-  "name": "dsh-prompt-enhancement",
+  "name": "prompt-enhancement",
   "version": "0.1.0",
   "private": false,
   "description": "Installable prompt enhancement bundle for DeepSeek Harness Web",
@@ -15,7 +15,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/usertianziyang/deepseek-harness-prompt-enhancement.git"
+    "url": "git+https://github.com/usertianziyang/prompt-enhancement.git"
   },
   "files": [
     "lib/index.js",

@@ -1,6 +1,6 @@
 - insert:
     - id: prompt-enhancement
-      name: dsh-prompt-enhancement
+      name: prompt-enhancement
       config:
         maxPromptChars: 12000
         maxContextChars: 12000

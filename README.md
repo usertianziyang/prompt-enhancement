@@ -1,10 +1,12 @@
-# DeepSeek Harness Prompt Enhancement
+# Prompt Enhancement
+
+English | [中文](README.zh.md)
 
 An installable DeepSeek Harness Web bundle that rewrites a draft into a precise coding-agent prompt without starting an Agent turn or changing the Session log.
 
 ## Requirements
 
-- DeepSeek Harness `0.1.0-rc.7`
+- DeepSeek Harness (compatible with multiple versions)
 - Node.js `^22.19.0` or `>=24.0.0`
 - A configured model provider in the target Web profile
 
@@ -13,20 +15,16 @@ An installable DeepSeek Harness Web bundle that rewrites a draft into a precise 
 Install the bundle into the official `web` profile:
 
 ```sh
-dsh plugin --profile web add github:usertianziyang/deepseek-harness-prompt-enhancement
+dsh plugin --profile web add github:usertianziyang/prompt-enhancement
 ```
 
 For a reproducible installation, pin a reviewed commit:
 
 ```sh
-dsh plugin --profile web add github:usertianziyang/deepseek-harness-prompt-enhancement#<commit-sha>
+dsh plugin --profile web add github:usertianziyang/prompt-enhancement#<commit-sha>
 ```
 
-The repository is private. Authenticate Git access before installing if needed:
-
-```sh
-gh auth setup-git
-```
+The repository is public and can be installed directly without additional Git authentication.
 
 Verify that the bundle layer is active, then start the Web profile:
 
@@ -42,7 +40,7 @@ The default Web URL is `http://127.0.0.1:3080`.
 Install the new commit and restart the running Web process:
 
 ```sh
-dsh plugin --profile web add github:usertianziyang/deepseek-harness-prompt-enhancement#<new-commit-sha>
+dsh plugin --profile web add github:usertianziyang/prompt-enhancement#<new-commit-sha>
 dsh web
 ```
 
@@ -51,7 +49,7 @@ Client assets are discovered from the installed package at startup. A browser re
 ## Uninstall
 
 ```sh
-dsh plugin --profile web remove dsh-prompt-enhancement
+dsh plugin --profile web remove prompt-enhancement
 ```
 
 ## Behavior
