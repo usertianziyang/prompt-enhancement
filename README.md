@@ -49,7 +49,7 @@ Client assets are discovered from the installed package at startup. A browser re
 ## Uninstall
 
 ```sh
-dsh plugin --profile web remove prompt-enhancement
+dsh plugin --profile web remove dsh-prompt-enhancement
 ```
 
 ## Behavior

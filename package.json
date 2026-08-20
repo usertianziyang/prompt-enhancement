@@ -1,5 +1,5 @@
 {
-  "name": "prompt-enhancement",
+  "name": "dsh-prompt-enhancement",
   "version": "0.1.0",
   "private": false,
   "description": "Installable prompt enhancement bundle for DeepSeek Harness Web",

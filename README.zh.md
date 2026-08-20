@@ -49,7 +49,7 @@ dsh web
 ## 卸载
 
 ```sh
-dsh plugin --profile web remove prompt-enhancement
+dsh plugin --profile web remove dsh-prompt-enhancement
 ```
 
 ## 行为
