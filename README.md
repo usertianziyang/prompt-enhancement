@@ -86,6 +86,21 @@ pnpm check:package
 
 ## Release
 
-The CI workflow checks types, builds, tests, verifies the npm file list, and uploads a packed `.tgz` artifact. Publishing a GitHub Release tagged `vX.Y.Z` runs the Release workflow; the tag must match `package.json#version`, and npm publishing uses GitHub OIDC with provenance.
+Use one command from a clean, synchronized `main` branch:
 
-Before the first automated release, configure npm Trusted Publishing for user `usertianziyang`, repository `deepseek-harness-prompt-enhancement`, and workflow `release.yml`. A manually dispatched Release workflow performs validation and an npm dry run only; it never publishes.
+```sh
+pnpm release patch
+pnpm release minor
+pnpm release major
+```
+
+The command generates the bilingual `CHANGELOG.md` entry, updates the package version, creates the release commit and annotated `vX.Y.Z` tag, and pushes both to `origin`. Commit subjects included in the changelog use Conventional Commits with Chinese first:
+
+```text
+feat: 支持恢复原始提示词 / Restore the original prompt
+fix: 失败时保留草稿 / Preserve the draft on failure
+```
+
+Pushing the tag starts the Release workflow. It verifies the tag and package version, runs type checks, builds, tests, and package validation, then creates a GitHub Release only after those checks pass. The release contains a deterministic source archive generated with `git archive` and the packed npm tarball. npm publishing uses GitHub OIDC with provenance. If a workflow fails, rerun it for transient failures; never move or delete the tag.
+
+Before the first automated release, configure npm Trusted Publishing for user `usertianziyang`, repository `deepseek-harness-prompt-enhancement`, and workflow `release.yml`.

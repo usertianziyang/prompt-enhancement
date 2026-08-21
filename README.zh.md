@@ -86,6 +86,21 @@ pnpm check:package
 
 ## 发布
 
-CI Workflow 会执行类型检查、构建、测试、npm 文件清单验证，并上传打包后的 `.tgz` Artifact。发布标签为 `vX.Y.Z` 的 GitHub Release 后，Release Workflow 会校验标签与 `package.json#version` 一致，再通过 GitHub OIDC 携带 provenance 发布到 npm。
+在干净且已同步的 `main` 分支上使用一条命令完成发布：
 
-第一次自动发布前，需要在 npm Trusted Publishing 中绑定用户 `usertianziyang`、仓库 `deepseek-harness-prompt-enhancement` 与工作流 `release.yml`。手动运行 Release Workflow 只会验证并执行 npm dry run，不会真正发布。
+```sh
+pnpm release patch
+pnpm release minor
+pnpm release major
+```
+
+命令会自动生成中英文双版本 `CHANGELOG.md`、更新包版本、创建发布提交和带注释的 `vX.Y.Z` 标签，并将提交和标签推送到 `origin`。进入 changelog 的提交信息采用 Conventional Commits，中文在前：
+
+```text
+feat: 支持恢复原始提示词 / Restore the original prompt
+fix: 失败时保留草稿 / Preserve the draft on failure
+```
+
+推送标签后会自动启动 Release Workflow。Workflow 会校验标签与 `package.json#version` 一致，执行类型检查、构建、测试和 npm 包校验；全部通过后才创建 GitHub Release。Release 会上传通过 `git archive` 生成的确定性源码包和打包后的 npm `.tgz`，并通过 GitHub OIDC 携带 provenance 发布到 npm。Workflow 失败时，临时故障可以重跑；不要移动或删除已经推送的标签。
+
+第一次自动发布前，需要在 npm Trusted Publishing 中绑定用户 `usertianziyang`、仓库 `deepseek-harness-prompt-enhancement` 与工作流 `release.yml`。

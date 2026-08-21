@@ -9,7 +9,6 @@ export const zh = {
   restore: '恢复',
   history: '历史',
   delete: '删除',
-  loading: '处理中…',
   empty: '暂无增强记录',
   failed: '提示词增强失败',
   cancelled: '已取消',
@@ -26,7 +25,7 @@ export type PromptEnhancementKey = keyof typeof zh
 /** English prompt-enhancement copy. */
 export const en = {
   mode: 'Enhancement mode', modeCurrent: 'Enhancement mode, current: {mode}', prompt: 'Prompt only', project: 'Project mode', enhance: 'Enhance prompt',
-  stop: 'Stop enhancement', restore: 'Restore', history: 'History', delete: 'Delete', loading: 'Working…',
+  stop: 'Stop enhancement', restore: 'Restore', history: 'History', delete: 'Delete',
   empty: 'No enhancement history', failed: 'Prompt enhancement failed', cancelled: 'Cancelled',
   sessionHistory: 'Enhancement history for this session', historyTitle: 'Prompt enhancement history', close: 'Close', cancel: 'Cancel', confirm: 'Confirm',
   draftChanged: 'The draft changed during enhancement. The result was saved to history.',
