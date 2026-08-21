@@ -41,7 +41,7 @@ jobs:
         run: |
           dsh plugin --profile web add ./artifacts/*.tgz
           dsh --profile web --dump-config > "${RUNNER_TEMP}/dsh-config.yml"
-          rg --fixed-strings '# == dsh-prompt-enhancement' "${RUNNER_TEMP}/dsh-config.yml"
+          grep -F -- '# == dsh-prompt-enhancement' "${RUNNER_TEMP}/dsh-config.yml"
       - uses: actions/upload-artifact@v4
         with:
           name: dsh-prompt-enhancement-${{ github.sha }}
